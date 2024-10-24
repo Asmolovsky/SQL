@@ -1,0 +1,207 @@
+CREATE TABLE author (
+    id serial,
+   first_name  varchar(15),
+   last_name varchar(15), 
+  PRIMARY KEY (id)
+);
+
+CREATE TABLE reader (
+    id serial,
+    first_name  varchar(15),
+    last_name varchar(15),
+    phone varchar(15),
+   PRIMARY KEY (id)
+);
+
+
+CREATE TABLE IF NOT EXISTS book (
+    id serial,
+	name  varchar(50),
+    description varchar(50),
+	author_id integer REFERENCES author,
+    reader_id integer REFERENCES reader,
+	PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS mark (
+        id serial,
+	value  integer,
+        date timestamp,
+	book_id integer REFERENCES book,
+        reader_id integer REFERENCES reader,
+	PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS mark_reader_relations (
+    id serial,
+    mark_id integer REFERENCES mark,
+    reader_id integer REFERENCES reader,
+	PRIMARY KEY (id)
+);
+
+INSERT INTO author (first_name, last_name) VALUES
+    ('Александр', 'Пушкин')
+
+SELECT book.name,
+       author.last_name        
+FROM book
+INNER JOIN author ON book.author_id = author.id
+WHERE author.last_name = 'Дюма'
+
+SELECT
+  reader.last_name,
+  count(mark.value)
+FROM reader
+INNER JOIN mark 
+ON mark.reader_id = reader.id
+GROUP BY reader.last_name
+HAVING count(mark.value) >= 2
+
+SELECT
+   book.name,
+   count(mark.value)
+FROM book
+FULL OUTER JOIN mark 
+ON mark.book_id = book.id
+GROUP BY book.name
+HAVING count(mark.value) = 0
+
+SELECT 
+     book.name,
+	 author.last_name,
+	 mark.value
+FROM book 
+FULL OUTER JOIN mark ON mark.book_id = book.id 
+INNER JOIN author ON book.author_id = author.id
+WHERE author.last_name = 'Дюма'
+GROUP BY book.name, author.last_name, mark.value 
+HAVING mark.value > 4
+
+SELECT 
+         reader.phone,
+	 reader.last_name,
+	 count(book.name)
+FROM reader
+INNER JOIN book ON book.reader_id = reader.id
+WHERE reader.phone = 'no'
+GROUP BY reader.last_name, reader.phone
+HAVING count(book.name) >=1
+
+SELECT 
+     mark.value,
+	 AVG(mark.value)
+FROM mark
+WHERE mark.value > 
+       (
+	     SELECT 
+	        AVG(mark.value)
+         FROM mark
+	   )
+GROUP BY mark.value
+
+# Оценки по книгам с отзывами
+SELECT mark.value 
+FROM mark 
+
+
+#Средняя оценка по книгам с отзывами
+SELECT 
+	 ROUND(AVG(mark.value), 2) AS average_mark
+FROM mark
+
+
+#6
+SELECT
+        mark.id,
+	mark.value,
+	ROUND((
+     SELECT  
+        AVG(mark.value) 
+     FROM mark
+     WHERE mark.value  > 0), 2)
+FROM mark
+WHERE mark.value > (
+     SELECT  
+        AVG(mark.value) 
+     FROM mark
+     WHERE mark.value  > 0) 
+
+# Без WHERE
+SELECT
+        mark.id,
+	mark.value,
+	ROUND((
+     SELECT  
+        AVG(mark.value) 
+     FROM mark), 2)
+FROM mark
+WHERE mark.value > (
+     SELECT  
+        AVG(mark.value) 
+     FROM mark)
+
+#С названием книг
+SELECT
+        book.name,
+        mark.id,
+	mark.value,
+	ROUND((
+        SELECT  
+            AVG(mark.value) 
+        FROM mark), 2) AS average_mark
+FROM mark
+JOIN book ON book.id=mark.book_id
+WHERE mark.value>(
+       SELECT  
+          AVG(mark.value) 
+       FROM mark) 
+==================================================================
+SELECT
+   Product.maker
+FROM Product
+WHERE Product.type='Printer'
+GROUP BY Product.maker
+
+SELECT
+   Laptop.model,
+   Laptop.ram,
+   Laptop.screen
+FROM Laptop
+WHERE Laptop.price>1000
+
+SELECT 
+   *
+FROM Printer
+WHERE Printer.color='y'
+
+SELECT
+   PC.model,
+   PC.speed,
+   PC.hd
+FROM PC
+WHERE (PC.cd='12x' 
+OR PC.cd='24x')
+AND PC.price<600
+
+SELECT
+   Product.maker,
+   Laptop.speed
+FROM Product
+JOIN Laptop 
+ON Product.model=Laptop.model
+WHERE Laptop.hd>=10
+
+SELECT
+   Product.model,
+   PC.price,
+   Laptop.price,
+   Printer.price
+FROM Product
+JOIN Laptop 
+ON Product.model=Laptop.model
+JOIN PC
+ON Product.model=PC.model
+JOIN Printer
+ON Product.model=Printer.model
+WHERE Product.maker='B' and PC.price, Laptop.price, Printer.price=price
+GROUP BY Product.model, PC.price, Laptop.price, Printer.price
